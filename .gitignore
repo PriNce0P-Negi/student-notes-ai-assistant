@@ -1,0 +1,27 @@
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Maven
+target/
+
+# Environment
+.env
+.env.*
+
+# Uploads
+uploads/
+
+# Logs
+*.log
+
+# Build
+build/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
