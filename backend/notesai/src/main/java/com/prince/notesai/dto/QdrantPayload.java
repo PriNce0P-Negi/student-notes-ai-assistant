@@ -9,6 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class QdrantPayload {
 
+    private String sessionId;
+
     private Long documentId;
+
     private Integer chunkIndex;
+
+    private Integer pageNumber;
 }

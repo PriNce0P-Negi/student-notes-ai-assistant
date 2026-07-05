@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans;
+    margin: 0;
+  }
+
+  /* Custom scrollbar — thin and dark */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+  /* Selection */
+  ::selection { @apply bg-violet-600/40 text-white; }
+}
+
+/* ── Component helpers ───────────────────────────────────────────── */
+@layer components {
+
+  /* Glassmorphism card */
+  .glass {
+    @apply bg-white/[0.04] backdrop-blur-md border border-white/[0.08];
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500
+           text-white font-medium text-sm px-4 py-2 rounded-xl
+           transition-all duration-200 active:scale-95 shadow-lg
+           shadow-violet-900/30 disabled:opacity-50 disabled:cursor-not-allowed
+           disabled:active:scale-100;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 bg-transparent hover:bg-white/[0.07]
+           text-slate-400 hover:text-slate-100 font-medium text-sm px-3 py-2
+           rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/40
+           text-red-400 hover:text-red-300 font-medium text-sm px-3 py-2
+           rounded-xl transition-all duration-200;
+  }
+
+  /* Text input */
+  .input {
+    @apply bg-slate-800/60 border border-slate-700/50 text-slate-100
+           placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm
+           focus:outline-none focus:ring-2 focus:ring-violet-600/50
+           focus:border-violet-600/50 transition-all duration-200 w-full;
+  }
+
+  /* Sidebar item */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
+           text-slate-400 hover:text-slate-100 hover:bg-white/[0.07]
+           cursor-pointer transition-all duration-150;
+  }
+
+  .sidebar-item.active {
+    @apply bg-violet-600/20 text-violet-300 border border-violet-600/30;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  /* Prose — markdown rendered AI response */
+  .prose-ai {
+    @apply text-slate-200 text-sm leading-relaxed;
+  }
+
+  .prose-ai h1, .prose-ai h2, .prose-ai h3 {
+    @apply font-semibold text-white mt-4 mb-2;
+  }
+
+  .prose-ai h1 { @apply text-lg; }
+  .prose-ai h2 { @apply text-base; }
+  .prose-ai h3 { @apply text-sm; }
+
+  .prose-ai p { @apply mb-3; }
+  .prose-ai ul { @apply list-disc list-inside mb-3 space-y-1; }
+  .prose-ai ol { @apply list-decimal list-inside mb-3 space-y-1; }
+  .prose-ai li { @apply text-slate-300; }
+
+  .prose-ai strong { @apply text-white font-semibold; }
+  .prose-ai em { @apply text-slate-300 italic; }
+
+  .prose-ai code {
+    @apply bg-slate-700/60 text-violet-300 text-xs px-1.5 py-0.5
+           rounded font-mono;
+  }
+
+  .prose-ai pre {
+    @apply bg-slate-800/80 border border-slate-700/50 rounded-xl p-4 mb-3
+           overflow-x-auto;
+  }
+
+  .prose-ai pre code {
+    @apply bg-transparent text-slate-200 text-xs p-0 rounded-none;
+  }
+
+  .prose-ai blockquote {
+    @apply border-l-2 border-violet-600/50 pl-4 italic text-slate-400 mb-3;
+  }
+
+  .prose-ai hr {
+    @apply border-slate-700/50 my-4;
+  }
+
+  .prose-ai a {
+    @apply text-violet-400 hover:text-violet-300 underline underline-offset-2;
+  }
+
+  .prose-ai table {
+    @apply w-full border-collapse text-xs mb-3;
+  }
+
+  .prose-ai th {
+    @apply text-left text-slate-400 font-medium border-b border-slate-700/50 pb-2 pr-4;
+  }
+
+  .prose-ai td {
+    @apply text-slate-300 border-b border-slate-800/50 py-1.5 pr-4;
+  }
+}
+
+/* ── Utility extras ──────────────────────────────────────────────── */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent;
+  }
+
+  .glow-violet {
+    box-shadow: 0 0 20px -5px theme('colors.violet.600');
+  }
+}

@@ -18,12 +18,15 @@ public class DocumentChunk {
 
     private Integer chunkIndex;
 
+    private Integer pageNumber;
+
     @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     @Column(name = "vector_id")
     private String vectorId;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne
     @JoinColumn(name = "document_id")
     private Document document;

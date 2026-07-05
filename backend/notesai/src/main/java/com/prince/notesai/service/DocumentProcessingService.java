@@ -4,10 +4,14 @@ import com.prince.notesai.entity.Document;
 import com.prince.notesai.entity.DocumentChunk;
 import com.prince.notesai.repository.DocumentChunkRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DocumentProcessingService {
@@ -17,46 +21,75 @@ public class DocumentProcessingService {
     private final QdrantService qdrantService;
     private final DocumentChunkRepository chunkRepository;
 
-    public void process(Document document, String pdfText) {
+    public void process(Document document, Map<Integer, String> pageTexts) {
 
-        List<String> chunks = textChunkingService.splitIntoChunks(pdfText);
+        log.info("═══════════════════════════════════════════════════");
+        log.info("[Processing] Starting: '{}' (id={}, session={})",
+                document.getOriginalFileName(),
+                document.getId(),
+                document.getSessionId());
+        log.info("[Processing] Pages with text: {}", pageTexts.size());
+        log.info("═══════════════════════════════════════════════════");
 
-        System.out.println("=================================");
-        System.out.println("Generating Embeddings...");
-        System.out.println("=================================");
+        AtomicInteger totalChunks = new AtomicInteger(0);
+        int chunkGlobalIndex = 0;
 
-        for (int i = 0; i < chunks.size(); i++) {
+        for (Map.Entry<Integer, String> entry : pageTexts.entrySet()) {
 
-            String chunkText = chunks.get(i);
+            int pageNumber = entry.getKey();
+            String pageText = entry.getValue();
 
-            DocumentChunk chunk = DocumentChunk.builder()
-                    .document(document)
-                    .chunkIndex(i)
-                    .content(chunkText)
-                    .build();
+            List<String> chunks = textChunkingService.splitIntoChunks(pageText);
 
-            chunk = chunkRepository.save(chunk);
+            log.debug("[Processing] Page {} → {} chunk(s)", pageNumber, chunks.size());
 
-            List<Float> embedding =
-                    embeddingService.generateEmbedding(chunkText);
+            for (int i = 0; i < chunks.size(); i++) {
 
-            qdrantService.uploadVector(
-                    chunk.getId(),
-                    document.getId(),
-                    i,
-                    embedding
-            );
+                String chunkText = chunks.get(i);
 
-            chunk.setVectorId(String.valueOf(chunk.getId()));
-            chunkRepository.save(chunk);
+                DocumentChunk chunk = DocumentChunk.builder()
+                        .document(document)
+                        .chunkIndex(chunkGlobalIndex)
+                        .pageNumber(pageNumber)
+                        .content(chunkText)
+                        .build();
 
-            System.out.println("Chunk : " + (i + 1));
-            System.out.println("Chunk ID : " + chunk.getId());
-            System.out.println("Embedding Dimension : " + embedding.size());
+                chunk = chunkRepository.save(chunk);
+
+                List<Float> embedding = embeddingService.generateEmbedding(chunkText);
+
+                qdrantService.uploadVector(
+                        chunk.getId(),
+                        document.getSessionId(),
+                        document.getId(),
+                        chunkGlobalIndex,
+                        pageNumber,
+                        embedding
+                );
+
+                chunk.setVectorId(String.valueOf(chunk.getId()));
+                chunkRepository.save(chunk);
+
+                log.info("[Processing] ✓ Chunk {}: page={}, idx={}, dim={}",
+                        totalChunks.incrementAndGet(),
+                        pageNumber,
+                        chunkGlobalIndex,
+                        embedding.size()
+                );
+
+                chunkGlobalIndex++;
+            }
         }
 
-        System.out.println("=================================");
-        System.out.println("All Chunks Processed Successfully");
-        System.out.println("=================================");
+        log.info("═══════════════════════════════════════════════════");
+        log.info("[Processing] ✅ Complete: '{}' — {} total chunks embedded.",
+                document.getOriginalFileName(), totalChunks.get());
+        log.info("═══════════════════════════════════════════════════");
+    }
+
+    public void process(Document document, String pdfText) {
+        log.warn("[Processing] Using legacy flat-text processing for '{}' — page numbers will all be 1.",
+                document.getOriginalFileName());
+        process(document, Map.of(1, pdfText));
     }
 }

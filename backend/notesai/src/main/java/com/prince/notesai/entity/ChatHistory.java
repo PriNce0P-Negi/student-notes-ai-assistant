@@ -18,10 +18,12 @@ public class ChatHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT")
+    private String sessionId;
+
+    @Column(columnDefinition = "LONGTEXT")
     private String question;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String answer;
 
     private LocalDateTime createdAt;

@@ -31,6 +31,10 @@ public class Document {
 
     private LocalDateTime uploadedAt;
 
+    @Column(name = "session_id")
+    private String sessionId;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(
             mappedBy = "document",
             cascade = CascadeType.ALL,

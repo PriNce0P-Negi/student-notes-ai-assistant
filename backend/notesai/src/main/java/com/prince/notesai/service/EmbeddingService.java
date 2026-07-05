@@ -1,5 +1,8 @@
 package com.prince.notesai.service;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.prince.notesai.dto.EmbeddingRequest;
 import com.prince.notesai.dto.EmbeddingResponse;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +45,8 @@ public class EmbeddingService {
         if (response == null
                 || response.getEmbedding() == null
                 || response.getEmbedding().getValues() == null) {
-            throw new RuntimeException("Failed to generate embedding.");
+
+            throw new RuntimeException("Embedding generation failed.");
         }
 
         return response.getEmbedding().getValues();
@@ -50,37 +54,45 @@ public class EmbeddingService {
 
     public String callGeminiChat(String prompt) {
 
-    String requestBody = """
-    {
-      "contents": [
+        String requestBody = """
         {
-          "parts": [
+          "contents": [
             {
-              "text": "%s"
+              "parts": [
+                {
+                  "text": %s
+                }
+              ]
             }
           ]
         }
-      ]
+        """.formatted(new com.google.gson.Gson().toJson(prompt));
+
+        String response = geminiWebClient
+                .post()
+                .uri("/v1beta/models/gemini-2.5-flash:generateContent")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+
+        JsonArray candidates = json.getAsJsonArray("candidates");
+
+        if (candidates == null || candidates.isEmpty()) {
+            return "No response generated.";
+        }
+
+        JsonObject first = candidates.get(0).getAsJsonObject();
+
+        JsonObject content = first.getAsJsonObject("content");
+
+        JsonArray parts = content.getAsJsonArray("parts");
+
+        return parts.get(0)
+                .getAsJsonObject()
+                .get("text")
+                .getAsString();
     }
-    """.formatted(prompt.replace("\"", "\\\""));
-
-    String response = geminiWebClient
-            .post()
-            .uri("/v1beta/models/gemini-2.5-flash:generateContent")
-            .bodyValue(requestBody)
-            .retrieve()
-            .bodyToMono(String.class)
-            .block();
-
-    com.google.gson.JsonObject json =
-            com.google.gson.JsonParser.parseString(response).getAsJsonObject();
-
-    return json.getAsJsonArray("candidates")
-            .get(0).getAsJsonObject()
-            .getAsJsonObject("content")
-            .getAsJsonArray("parts")
-            .get(0).getAsJsonObject()
-            .get("text")
-            .getAsString();
-}
 }

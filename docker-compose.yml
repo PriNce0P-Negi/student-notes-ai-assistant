@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: notesai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: notes_ai
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - notesai-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: notesai-qdrant
+    ports:
+      - "6335:6333"
+      - "6336:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - notesai-network
+
+  backend:
+    build:
+      context: ./backend/notesai
+      dockerfile: Dockerfile
+    container_name: notesai-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/notes_ai
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - QDRANT_URL=http://notesai-qdrant:6333
+      # Must provide GEMINI_API_KEY when running: GEMINI_API_KEY=xxx docker-compose up
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - notesai-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Backend API is mapped to /api by nginx
+        - VITE_API_BASE=/api
+    container_name: notesai-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - notesai-network
+
+volumes:
+  mysql_data:
+  qdrant_data:
+
+networks:
+  notesai-network:
+    driver: bridge
